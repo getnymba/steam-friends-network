@@ -1,1 +1,1 @@
-# steam-friends-network
+# Steam friends network visualization using NetworkX

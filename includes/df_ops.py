@@ -18,7 +18,7 @@ class DataframeOperations:
                         ((st_df["source"] == id) & (st_df["target"] == friend[0]))
                         | ((st_df["target"] == id) & (st_df["source"] == friend[0]))
                     ].shape[0]
-                    <= 0
+                    == 0
                 ):
                     self.add_data_to_df(st_df, [id, friend[0]])
 
