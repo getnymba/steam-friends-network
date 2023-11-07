@@ -1,0 +1,8 @@
+bs4
+requests
+pandas
+aiohttp
+asyncio
+pyvis
+matplotlib
+bokeh
