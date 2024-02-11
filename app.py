@@ -1,49 +1,67 @@
 import networkx as nx
 import pandas as pd
-from bokeh.io import output_notebook, show, save
-from bokeh.models import Range1d, Circle, ColumnDataSource, MultiLine
+from bokeh.io import show, save
+from bokeh.models import Range1d, Circle, MultiLine
 from bokeh.plotting import figure
 from bokeh.plotting import from_networkx
-from bokeh.palettes import Blues8, Reds8, Purples8, Oranges8, Viridis8, Spectral8
+from bokeh.palettes import Blues8
 from bokeh.transform import linear_cmap
+from includes.data_scrape import Scraper
 from includes.df_ops import DataframeOperations
+import asyncio
+from data_collect import Finder
+
+input = input("Enter steam profile link: ")
+
+
+async def get_data():
+    finder = Finder(Scraper(), DataframeOperations())
+    await finder.find_st4ck(input)
+
+
+asyncio.run(get_data())
 
 df_ops = DataframeOperations()
-user_data = pd.read_csv("output/user_data_081123.csv")
+user_data = pd.read_csv("./output/data.csv")
+
 # Read the data from the CSV file
 df = df_ops.create_source_target_df(user_data)
-attribute_df = df_ops.create_attribute_df(user_data)
-
-G = nx.from_pandas_edgelist(df, "source", "target")
-
+G = nx.Graph()
+G.add_nodes_from(user_data["id"].tolist())
+G.add_edges_from(list(df.to_records(index=False)))
 # some bug fix according to stackoverflow
 mapping = dict((n, i) for i, n in enumerate(G.nodes))
 H = nx.relabel_nodes(G, mapping)
 
-# draw
+# St4ck's key
+st4ck_key = mapping["St4ck"]
+
+# Degree
 degrees = dict(nx.degree(H))
 nx.set_node_attributes(H, name="degree", values=degrees)
+
+# Adjust node size
 number_to_adjust_by = 5
 adjusted_node_size = dict(
     [(node, degree + number_to_adjust_by) for node, degree in nx.degree(H)]
 )
+# Adjust the size of St4ck's node & one's node
+adjusted_node_size[0] += 15
+adjusted_node_size[st4ck_key] += 15
+
 nx.set_node_attributes(H, name="adjusted_node_size", values=adjusted_node_size)
 size_by_this_attribute = "adjusted_node_size"
 color_by_this_attribute = "adjusted_node_size"
-# Pick a color palette — Blues8, Reds8, Purples8, Oranges8, Viridis8
 color_palette = Blues8
 
-# Choose a title!
-title = "Steam Friends Network"
+# id
+id = dict((i, n) for i, n in enumerate(mapping))
+nx.set_node_attributes(H, name="id", values=id)
+title = "How far are you from St4ck?"
 
-# Establish which categories will appear when hovering over each node
-
-
-# fix here
+# Tooltip
 HOVER_TOOLTIPS = [
     ("id", "@id"),
-    ("name", "@name"),
-    ("country", "@country"),
     ("degree", "@degree"),
 ]
 
